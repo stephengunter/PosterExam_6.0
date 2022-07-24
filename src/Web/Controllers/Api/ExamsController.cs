@@ -326,8 +326,8 @@ namespace Web.Controllers.Api
 
 			var exam = model.MapEntity(_mapper, CurrentUserId);
 
-			ValidateSaveRequest(exam);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateSaveRequest(exam);
+			if (!valid) return BadRequest(ModelState);
 
 			_examsService.SaveExam(existingEntity, exam);
 
@@ -345,8 +345,8 @@ namespace Web.Controllers.Api
 			exam.Reserved = true;
 			exam.SetUpdated(CurrentUserId);
 
-			ValidateSaveRequest(exam);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateSaveRequest(exam);
+			if (!valid) return BadRequest(ModelState);
 
 			await _examsService.UpdateAsync(exam);
 
@@ -360,8 +360,8 @@ namespace Web.Controllers.Api
 			var exam = _examsService.GetById(id, withOptions);
 
 			if (exam == null) return NotFound();
-			ValidateEditRequest(exam);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateEditRequest(exam);
+			if (!valid) return BadRequest(ModelState);
 
 			var types = new List<PostType> { PostType.Question, PostType.Option, PostType.Resolve };
 			var attachments = await _attachmentsService.FetchByTypesAsync(types);
@@ -376,8 +376,8 @@ namespace Web.Controllers.Api
 			var existingEntity = await _examsService.GetByIdAsync(id);
 			if (existingEntity == null) return NotFound();
 
-			ValidateEditRequest(existingEntity);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateEditRequest(existingEntity);
+			if (!valid) return BadRequest(ModelState);
 
 
 			var exam = model.MapEntity(_mapper, CurrentUserId);
@@ -404,8 +404,8 @@ namespace Web.Controllers.Api
 			var exam = _examsService.GetById(id, withOptions);
 			if (exam == null) return NotFound();
 
-			ValidateRequest(exam);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateRequest(exam);
+			if (!valid) return BadRequest(ModelState);
 
 			var resolves = await _resolvesService.FetchExamResolvesAsync(exam);
 
@@ -421,8 +421,8 @@ namespace Web.Controllers.Api
 			var exam = await _examsService.GetByIdAsync(id);
 			if (exam == null) throw new EntityNotFoundException(new Exam { Id = id });
 
-			ValidateDeleteRequest(exam);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			bool valid = ValidateDeleteRequest(exam);
+			if (!valid) return BadRequest(ModelState);
 
 			await _examsService.DeleteAsync(exam);
 
@@ -444,26 +444,33 @@ namespace Web.Controllers.Api
 
 		#region Validate
 
-		void ValidateRequest(Exam exam)
+		bool ValidateRequest(Exam exam) 
 		{
-			if (exam.UserId != CurrentUserId) ModelState.AddModelError("userId", "權限不足");
+			if (exam.UserId != CurrentUserId)
+			{
+				ModelState.AddModelError("userId", "權限不足");
+				return false;
+			}
+
+			return true;
 		}
 
-		void ValidateSaveRequest(Exam exam)
-		{
-			ValidateRequest(exam);
-		}
+		bool ValidateSaveRequest(Exam exam) => ValidateRequest(exam);
 
-		void ValidateDeleteRequest(Exam exam)
-		{
-			ValidateRequest(exam);
-		}
+		bool ValidateDeleteRequest(Exam exam) => ValidateRequest(exam);
 
-		void ValidateEditRequest(Exam exam)
+		bool ValidateEditRequest(Exam exam)
 		{
-			ValidateRequest(exam);
+			bool valid = ValidateRequest(exam);
+			if (!valid) return false;
 
-			if (exam.IsComplete) ModelState.AddModelError("isComplete", "此測驗已經完成");
+			if (exam.IsComplete)
+			{
+				ModelState.AddModelError("isComplete", "此測驗已經完成");
+				return false;
+			}
+
+			return true;
 
 		}
 

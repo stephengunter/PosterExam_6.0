@@ -21,13 +21,10 @@ namespace Web.Controllers.Tests
     public class ATestsController : BaseTestController
     {
         private readonly AppSettings _appSettings;
-        //private readonly ISubscribesService _subscribesService;
-        private readonly DefaultContext _context;
-        public ATestsController(IOptions<AppSettings> appSettings, DefaultContext context)
+        public ATestsController(IOptions<AppSettings> appSettings)
         {
 
             _appSettings = appSettings.Value;
-            _context = context;
         }
 
 
@@ -35,11 +32,8 @@ namespace Web.Controllers.Tests
         [HttpGet]
         public async Task<ActionResult>  Index()
         {
-            string userId = "695f31b3-74d7-4fa2-b877-898c31997b00";
-            return Ok(_context.Exams.ToList());
-
-
-
+            
+            return Ok();
         }
 
 

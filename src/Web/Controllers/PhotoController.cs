@@ -31,10 +31,10 @@ namespace Web.Controllers.Api
 		string GetImgSourcePath(string filename) => Path.Combine(UploadFilesPath, filename);
 
 		[HttpGet("")]
-		public IActionResult Index(string name, string type, int width = 0, int height = 0)
+		public IActionResult Index(string name, string? type = "", int width = 0, int height = 0)
 		{
 			string imgSourcePath = ValidateRequest(name);
-			if (!ModelState.IsValid) return BadRequest(ModelState);
+			if (String.IsNullOrEmpty(imgSourcePath)) return BadRequest(ModelState);
 
 			// 長寬數值不正確時, 回傳原圖
 			if (width < 0 || height < 0) return SendOriginalImage(imgSourcePath);
